@@ -391,6 +391,14 @@ sed -i "s|and mods:find(\"nft_tproxy\")) then|and mods:find(\"nft_tproxy\")) or 
 grep -q "NFT_REDIR=y" $GLOBAL_LUA && grep -q "zcat /proc/config.gz" $GLOBAL_LUA || {
     echo "passwall2 global.lua component probe patch failed" >&2; exit 1; }
 echo "passwall2: dnsmasq-full installed, global.lua built-in nft probe patched"
+# SFTP for the stock dropbear: its built-in subsystem path is
+# /usr/libexec/sftp-server, which only this package provides.  Without it scp
+# works but sftp (and editors that save over it) fail with "subsystem request
+# failed".  140 KiB; the sshd is NOT swapped out -- that would take port 22 and
+# the LuCI SSH pages, which ask for /usr/sbin/dropbear.
+apk add openssh-sftp-server >/dev/null
+[ -x /usr/libexec/sftp-server ] || { echo "openssh-sftp-server did not provide /usr/libexec/sftp-server" >&2; exit 1; }
+echo "sftp: $(sed -n "/^P:openssh-sftp-server$/{n;s/^V://p}" /lib/apk/db/installed) for dropbear"
 # the info screen'"'"'s packages (cage, cog, Mesa, ...), when there is one
 if [ -f /in/infoscreen/packages.txt ]; then
     # (the transplant above: used when the repository has none of those packages)
