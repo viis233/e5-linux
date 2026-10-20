@@ -15,7 +15,7 @@ import socket
 import sys
 import time
 
-HOST = os.environ.get('E5_TELNET_HOST', '192.168.9.1')
+HOST = os.environ.get('E5_TELNET_HOST', '10.0.55.1')
 PORT = int(os.environ.get('E5_TELNET_PORT', '23'))
 USER = os.environ.get('E5_TELNET_USER', 'root')
 PASS = os.environ.get('E5_TELNET_PASS', 'root')
