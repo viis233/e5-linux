@@ -371,19 +371,25 @@ apk add --allow-untrusted /in/preload/pw2deps/*.apk \
     /in/preload/luci-i18n-zerotier-zh-cn-26.236.50544~cb5d434.apk >/dev/null
 cp -a /in/preload-core/usr/bin/. /usr/bin/
 echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/installed) passwall2, $(sed -n "/^P:zerotier$/{n;s/^V://p}" /lib/apk/db/installed) zerotier"
-# PassWall2'"'"'s dedicated dnsmasq instance (port 2003) needs nftset/ipset.
-# The stock slim dnsmasq is built with no-nftset and aborts on its nftset=
-# directive, which breaks the DNS split and the node-name lookups.  Install
-# the full build instead (official feed).
+# PassWall2'"'"'s dedicated dnsmasq instance needs nftset.  The stock slim
+# dnsmasq is built with no-nftset, so it aborts on the nftset= directive and
+# the DNS split plus node-name lookups break.  Install the full build (the
+# official feed) and check for the positive option only: PassWall2 itself is
+# fooled by `grep -w nftset` matching inside "no-nftset", so a plain
+# `grep -q nftset` here would pass for the slim build too.
 apk add dnsmasq-full >/dev/null
-dnsmasq --version | grep -q nftset || { echo "dnsmasq-full lacks nftset support" >&2; exit 1; }
+dnsmasq --version | grep -qw no-nftset && { echo "dnsmasq-full still lacks nftset support" >&2; exit 1; }
+dnsmasq --version | grep -qw nftset || { echo "dnsmasq-full lacks nftset support" >&2; exit 1; }
 # LuCI'"'"'s "Missing components, transparent proxy is unavailable" is a false
-# alarm on this kernel: it probes `lsmod` for nft_redir/nft_tproxy, but the E5
-# kernel builds those nft features in (they still register under /sys/module,
-# so check it too).  Keep the stock component detection intact.
+# alarm on this kernel: PassWall2 detects the feature with `lsmod`, but the E5
+# kernel compiles nft redir/tproxy into nf_tables (no module unit, so neither
+# lsmod nor /sys/module lists them).  Feed the probe the built-in kernel
+# config as a second source; module-based kernels still match on lsmod.
 GLOBAL_LUA=/usr/lib/lua/luci/model/cbi/passwall2/client/global.lua
-sed -i "s|io.popen(\"lsmod\")|io.popen(\"lsmod; ls /sys/module 2>/dev/null\")|" $GLOBAL_LUA
-grep -q "ls /sys/module" $GLOBAL_LUA || { echo "passwall2 global.lua component probe patch failed" >&2; exit 1; }
+sed -i "s|io.popen(\"lsmod\")|io.popen(\"lsmod; zcat /proc/config.gz 2>/dev/null\")|" $GLOBAL_LUA
+sed -i "s|and mods:find(\"nft_tproxy\")) then|and mods:find(\"nft_tproxy\")) or (mods:find(\"NFT_REDIR=y\") and mods:find(\"NFT_TPROXY=y\")) then|" $GLOBAL_LUA
+grep -q "NFT_REDIR=y" $GLOBAL_LUA && grep -q "zcat /proc/config.gz" $GLOBAL_LUA || {
+    echo "passwall2 global.lua component probe patch failed" >&2; exit 1; }
 echo "passwall2: dnsmasq-full installed, global.lua built-in nft probe patched"
 # the info screen'"'"'s packages (cage, cog, Mesa, ...), when there is one
 if [ -f /in/infoscreen/packages.txt ]; then
