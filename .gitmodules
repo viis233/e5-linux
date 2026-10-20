@@ -18,7 +18,7 @@
 	url = https://github.com/sprd-linux-devs/linux_device_t551m.git
 [submodule "device/openwrt_device_common"]
 	path = device/openwrt_device_common
-	url = https://github.com/sprd-linux-devs/openwrt_device_common.git
+	url = https://github.com/viis233/openwrt_device_common.git
 [submodule "device/openwrt_device_e5"]
 	path = device/openwrt_device_e5
 	url = https://github.com/sprd-linux-devs/openwrt_device_e5.git
