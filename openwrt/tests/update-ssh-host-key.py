@@ -28,7 +28,7 @@ class HostKeys(unittest.TestCase):
             cache = package / 'backups/ssh-e5.known_hosts'
             cache.write_text('stale key for another E5 at the same USB IP\n')
             client = Mock()
-            args = ['update', '--package', str(package), '--host', '192.168.9.1',
+            args = ['update', '--package', str(package), '--host', '10.0.55.1',
                     '--raw-size', '4096', '--raw-sha256', '0' * 64, '--check-only']
             with patch.object(sys, 'argv', args), \
                  patch.dict(os.environ, {'E5_TELNET_PASS': 'test-only'}), \
