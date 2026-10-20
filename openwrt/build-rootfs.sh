@@ -130,6 +130,12 @@ done
 # (only the pinned ones go in)
 EXTRA_LIST=$(printf "%s\n" "$ARGON_APKS" | awk '{print "/in/extra/" $2}' | tr '\n' ' ')
 
+# Extra pre-installed software (PassWall2 + proxy cores + ZeroTier/LuCI):
+# staged to work/openwrt/preload (see openwrt/build-preload.sh for the pins).
+# needs bash: the script uses set -o pipefail, and sh is dash on Debian/Ubuntu.
+PRELOAD="$WORK/preload"
+bash "$HERE/build-preload.sh"
+
 ls "$OUT"/bluez-daemon-*.apk >/dev/null 2>&1 || {
     echo "no BlueZ package in $OUT -- run openwrt/build-bluez.sh first" >&2; exit 1; }
 ls "$OUT"/modemmanager-1*.apk >/dev/null 2>&1 || {
@@ -299,6 +305,7 @@ docker run --rm --platform linux/arm64 \
     -v "$WIFI_APKS":/in/wifi-sae:ro \
     -v "$SA":/in/sa:ro -e STANDALONE="$STANDALONE" -v "$RM":/in/root-modules:ro \
     -v "$WORK/extra":/in/extra:ro -e EXTRA_LIST="$EXTRA_LIST" -v "$TP":/in/transplant:ro \
+    -v "$PRELOAD":/in/preload:ro -v "$PRELOAD/core":/in/preload-core:ro \
     -v "$TAROUT":/out -e NAME="$NAME" -e VERSION="$VERSION" -e E5_BUILD_EPOCH="${E5_BUILD_EPOCH:-}" -e CONTAINERS="$CONTAINERS" \
     e5-openwrt-base:$VER /bin/sh -euc '
 mkdir -p /var/lock /var/run /tmp
@@ -353,6 +360,17 @@ done
 # the Argon theme (its release'"'"'s packages, unsigned)
 apk add --allow-untrusted $EXTRA_LIST >/dev/null
 echo "argon: $(sed -n "/^P:luci-theme-argon$/{n;s/^V://p}" /lib/apk/db/installed)"
+# Extra pre-installed software: PassWall2 with its dependencies, ZeroTier and
+# their LuCI apps, then the proxy cores as raw ELF in usr/bin (PassWall2'"'"'s
+# default @global_app[0].xray_file / sing_box_file path).
+apk add --allow-untrusted /in/preload/pw2deps/*.apk \
+    /in/preload/luci-app-passwall2-26.10.1-r2.apk \
+    /in/preload/luci-i18n-passwall2-zh-cn-26.10.1.apk \
+    /in/preload/zerotier-1.16.0-r2.apk \
+    /in/preload/luci-app-zerotier-26.236.50544~cb5d434.apk \
+    /in/preload/luci-i18n-zerotier-zh-cn-26.236.50544~cb5d434.apk >/dev/null
+cp -a /in/preload-core/usr/bin/. /usr/bin/
+echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/installed) passwall2, $(sed -n "/^P:zerotier$/{n;s/^V://p}" /lib/apk/db/installed) zerotier"
 # the info screen'"'"'s packages (cage, cog, Mesa, ...), when there is one
 if [ -f /in/infoscreen/packages.txt ]; then
     # (the transplant above: used when the repository has none of those packages)
