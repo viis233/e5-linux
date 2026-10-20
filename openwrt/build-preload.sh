@@ -105,5 +105,7 @@ chmod 0755 "$OUT/core/usr/bin/sing-box"
 for f in "$OUT/core/usr/bin/xray" "$OUT/core/usr/bin/sing-box"; do
     [ "$(od -An -t u2 -j 18 -N 2 "$f" | tr -d ' ')" = 183 ] || { echo "$f is not arm64" >&2; exit 1; }
 done
+# They land in the image as root; a host uid (e.g. 1001 in CI) must not leak in.
+chown 0:0 "$OUT/core/usr/bin/xray" "$OUT/core/usr/bin/sing-box"
 
 echo "preload staged: $(ls "$OUT"/*.apk | wc -l) apk + 12 pw2 deps + 2 cores"
