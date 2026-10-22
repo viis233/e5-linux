@@ -5,13 +5,13 @@
 #
 # What is staged, and why it is separate from the official feed:
 #
-#  * PassWall2 (luci-app-passwall2 + 12 dependencies + zh-cn i18n), from the
-#    GitHub release Openwrt-Passwall/openwrt-passwall2 (26.10.1-2).  OpenWrt's
+#  * PassWall2 (luci-app-passwall2 + dependencies + zh-cn i18n), from the
+#    GitHub release Openwrt-Passwall/openwrt-passwall2 (26.10.20-1).  OpenWrt's
 #    feeds do not carry it, so it is installed unsigned (--allow-untrusted).
-#  * The proxy cores it needs: Xray 26.9.30 (arm64-v8a) and sing-box 1.14.2
-#    (linux-arm64-musl -- OpenWrt has no glibc loader, a glibc build fails).
-#    They are ELF files, not packages; they land in usr/bin/ of the image
-#    (PassWall2's default @global_app[0].xray_file/sing_box_file path).
+#    Since 26.10.20-1 the dependency bundle also carries the proxy cores it
+#    needs (xray-core 26.10.17 and sing-box 1.14.3), so no separate ELF
+#    download is needed -- their packages place them in usr/bin/ (PassWall2's
+#    default @global_app[0].xray_file/sing_box_file path).
 #  * ZeroTier 1.16.0-r2 (the ImmortalWrt build that implements the
 #    fw_allow_* options the stock package drops) and its LuCI app + zh-cn
 #    translation, from the ImmortalWrt 25.12.2 aarch64_generic repository.
@@ -26,11 +26,8 @@ WORK="$TOP/work/openwrt"
 OUT="$WORK/preload"
 mkdir -p "$OUT"
 
-# PassWall2 -- GitHub release 26.10.1-2
-PW2_URL=https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.1-2
-# Xray / sing-box cores (raw ELF, musl static)
-XRAY_URL=https://github.com/XTLS/Xray-core/releases/download/v26.9.30/Xray-linux-arm64-v8a.zip
-SINGBOX_URL=https://github.com/SagerNet/sing-box/releases/download/v1.14.2/sing-box-1.14.2-linux-arm64-musl.tar.gz
+# PassWall2 -- GitHub release 26.10.20-1
+PW2_URL=https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.20-1
 # ZeroTier + LuCI from ImmortalWrt 25.12.2 (aarch64_generic)
 IW_BASE=https://downloads.immortalwrt.org/releases/25.12.2/packages/aarch64_generic
 
@@ -45,21 +42,17 @@ fetch() { # url file sha256
 }
 
 # --- PassWall2 main package + zh-cn ---
-fetch "$PW2_URL/luci-app-passwall2-26.10.1-r2.apk" \
-    "$OUT/luci-app-passwall2-26.10.1-r2.apk" \
-    a2bc8c2bea2da3993691f306e5e752f03e50daf88fbc3ebd36af859cc28dd3d6
-fetch "$PW2_URL/luci-i18n-passwall2-zh-cn-26.10.1.apk" \
-    "$OUT/luci-i18n-passwall2-zh-cn-26.10.1.apk" \
-    6a5626a028a71b11d30093bed7bd5acb04f9840777f4f3b578b33fc3fb7737e8
+fetch "$PW2_URL/luci-app-passwall2-26.10.20-r1.apk" \
+    "$OUT/luci-app-passwall2-26.10.20-r1.apk" \
+    564f9dcd95a222dce565839e365ac89a1bbb9a4cc51aab1314086e7df509e59c
+fetch "$PW2_URL/luci-i18n-passwall2-zh-cn-26.10.20.apk" \
+    "$OUT/luci-i18n-passwall2-zh-cn-26.10.20.apk" \
+    e041d16af6d5b00dcc8b75026e226ecdbf7a66422fe8e8584c1dde72bd14d97a
 fetch "$PW2_URL/packages_apk_aarch64_generic.zip" \
     "$OUT/packages_apk_aarch64_generic.zip" \
-    a4b54b33b13e293348e12751634ea6e044fc1d55325ab8facfd72db7ce71d9b6
+    38180070bc3789b1a496dcd1f73524f540d248c7d8114f04d9f96e2744b7d5f3
 
-# --- proxy cores (ELF into usr/bin) ---
-fetch "$XRAY_URL" "$OUT/xray-26.9.30.zip" \
-    9886f077f9fd8e6713b84c377c1c7db4e53b9bfa8c276a5bd12561139522b473
-fetch "$SINGBOX_URL" "$OUT/sing-box-1.14.2-musl.tar.gz" \
-    675297394f9430cebb72b3c48ba8bce0d6f7c750a9d68a8f7f88c515c8255cd1
+# --- proxy cores are bundled in the PassWall2 dependency zip above ---
 
 # --- ZeroTier + LuCI (ImmortalWrt) ---
 fetch "$IW_BASE/packages/zerotier-1.16.0-r2.apk" \
@@ -86,32 +79,4 @@ with zipfile.ZipFile(src) as z:
 print('%d apk extracted' % len([n for n in zipfile.ZipFile(src).namelist() if n.endswith('.apk')]))
 PY
 
-# --- unpack proxy cores to usr/bin ---
-rm -rf "$OUT/core" && mkdir -p "$OUT/core/usr/bin"
-python3 - "$OUT/xray-26.9.30.zip" "$OUT/core/usr/bin/xray" <<'PY'
-import sys, zipfile, stat
-src, dst = sys.argv[1], sys.argv[2]
-with zipfile.ZipFile(src) as z:
-    data = z.read('xray')
-open(dst, 'wb').write(data)
-import os
-os.chmod(dst, 0o755)
-PY
-tar -xzf "$OUT/sing-box-1.14.2-musl.tar.gz" -C "$OUT/core/usr/bin" --strip-components=1 \
-    --wildcards '*/sing-box'
-chmod 0755 "$OUT/core/usr/bin/sing-box"
-
-# verify the extracted cores are static arm64 ELF
-for f in "$OUT/core/usr/bin/xray" "$OUT/core/usr/bin/sing-box"; do
-    [ "$(od -An -t u2 -j 18 -N 2 "$f" | tr -d ' ')" = 183 ] || { echo "$f is not arm64" >&2; exit 1; }
-done
-# They land in the image as root; a host uid (e.g. 1001 in CI) must not leak in.
-# CI runs this as a normal user, where a plain chown is "Operation not
-# permitted": GitHub's runners have NOPASSWD sudo, and a root build needs none.
-if [ "$(id -u)" -eq 0 ]; then
-    chown 0:0 "$OUT/core/usr/bin/xray" "$OUT/core/usr/bin/sing-box"
-else
-    sudo chown 0:0 "$OUT/core/usr/bin/xray" "$OUT/core/usr/bin/sing-box"
-fi
-
-echo "preload staged: $(ls "$OUT"/*.apk | wc -l) apk + 12 pw2 deps + 2 cores"
+echo "preload staged: $(ls "$OUT"/*.apk | wc -l) apk + $(ls "$OUT/pw2deps"/*.apk | wc -l) pw2 deps (incl. xray-core + sing-box)"

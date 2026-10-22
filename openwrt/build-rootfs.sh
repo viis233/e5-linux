@@ -305,7 +305,7 @@ docker run --rm --platform linux/arm64 \
     -v "$WIFI_APKS":/in/wifi-sae:ro \
     -v "$SA":/in/sa:ro -e STANDALONE="$STANDALONE" -v "$RM":/in/root-modules:ro \
     -v "$WORK/extra":/in/extra:ro -e EXTRA_LIST="$EXTRA_LIST" -v "$TP":/in/transplant:ro \
-    -v "$PRELOAD":/in/preload:ro -v "$PRELOAD/core":/in/preload-core:ro \
+    -v "$PRELOAD":/in/preload:ro \
     -v "$TAROUT":/out -e NAME="$NAME" -e VERSION="$VERSION" -e E5_BUILD_EPOCH="${E5_BUILD_EPOCH:-}" -e CONTAINERS="$CONTAINERS" \
     e5-openwrt-base:$VER /bin/sh -euc '
 mkdir -p /var/lock /var/run /tmp
@@ -361,15 +361,15 @@ done
 apk add --allow-untrusted $EXTRA_LIST >/dev/null
 echo "argon: $(sed -n "/^P:luci-theme-argon$/{n;s/^V://p}" /lib/apk/db/installed)"
 # Extra pre-installed software: PassWall2 with its dependencies, ZeroTier and
-# their LuCI apps, then the proxy cores as raw ELF in usr/bin (PassWall2'"'"'s
-# default @global_app[0].xray_file / sing_box_file path).
+# their LuCI apps.  The 26.10.20-1 dependency bundle carries the proxy cores
+# too (xray-core 26.10.17, sing-box 1.14.3), so PassWall2's default
+# @global_app[0].xray_file / sing_box_file path in usr/bin is already served.
 apk add --allow-untrusted /in/preload/pw2deps/*.apk \
-    /in/preload/luci-app-passwall2-26.10.1-r2.apk \
-    /in/preload/luci-i18n-passwall2-zh-cn-26.10.1.apk \
+    /in/preload/luci-app-passwall2-26.10.20-r1.apk \
+    /in/preload/luci-i18n-passwall2-zh-cn-26.10.20.apk \
     /in/preload/zerotier-1.16.0-r2.apk \
     /in/preload/luci-app-zerotier-26.236.50544~cb5d434.apk \
     /in/preload/luci-i18n-zerotier-zh-cn-26.236.50544~cb5d434.apk >/dev/null
-cp -a /in/preload-core/usr/bin/. /usr/bin/
 echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/installed) passwall2, $(sed -n "/^P:zerotier$/{n;s/^V://p}" /lib/apk/db/installed) zerotier"
 # PassWall2'"'"'s dedicated dnsmasq instance needs nftset.  The stock slim
 # dnsmasq is built with no-nftset, so it aborts on the nftset= directive and
