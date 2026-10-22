@@ -30,7 +30,7 @@
 	url = https://github.com/sprd-linux-devs/openwrt_device_t551m.git
 [submodule "ci/infoscreen"]
 	path = ci/infoscreen
-	url = https://github.com/Enceka/infoscreen.git
+	url = https://github.com/viis233/e5-infoscreen.git
 [submodule "ci/infoscreen-plugins"]
 	path = ci/infoscreen-plugins
 	url = https://github.com/Enceka/infoscreen-plugins.git
