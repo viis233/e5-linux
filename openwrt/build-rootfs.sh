@@ -362,7 +362,7 @@ apk add --allow-untrusted $EXTRA_LIST >/dev/null
 echo "argon: $(sed -n "/^P:luci-theme-argon$/{n;s/^V://p}" /lib/apk/db/installed)"
 # Extra pre-installed software: PassWall2 with its dependencies, ZeroTier and
 # their LuCI apps.  The 26.10.20-1 dependency bundle carries the proxy cores
-# too (xray-core 26.10.17, sing-box 1.14.3), so PassWall2's default
+# too (xray-core 26.10.17, sing-box 1.14.3), so the PassWall2 default
 # @global_app[0].xray_file / sing_box_file path in usr/bin is already served.
 apk add --allow-untrusted /in/preload/pw2deps/*.apk \
     /in/preload/luci-app-passwall2-26.10.20-r1.apk \
