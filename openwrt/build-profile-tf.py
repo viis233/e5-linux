@@ -281,7 +281,8 @@ def audit(root, profile, release):
                  'usr/bin/docker', 'usr/bin/containerd', 'usr/bin/runc'):
         assert not (root / name).exists(), name
     assert all(p.name in ('regulatory.db', 'regulatory.db.p7s', 'rtl_nic') for p in (root / 'lib/firmware').iterdir())
-    assert (root / 'etc/shadow').read_text().startswith('root::')
+    shadow = (root / 'etc/shadow').read_text().splitlines()[0]
+    assert shadow.startswith('root:') and not shadow.startswith('root::'), 'root password must be set (root)'
     assert (root / 'etc/machine-id').read_text() == ''
     for name in ('sbin/block', 'lib/libblkid-tiny.so', 'etc/init.d/fstab',
                  'lib/netifd/hostapd-unisoc.sh', 'usr/share/ucode/wifi/unisoc-sae.uc',

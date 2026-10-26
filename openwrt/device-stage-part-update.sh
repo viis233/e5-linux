@@ -46,7 +46,7 @@ done
 [ -s lib/firmware/wcnmodem.bin ] && [ -x opt/e5/android/vendor/bin/modem_control ]
 tar -cf /.e5-update/firmware.tar $firmware
 settings=
-for name in etc/config etc/shadow etc/passwd etc/group etc/dropbear etc/e5 etc/e5linux \
+for name in etc/config etc/shadow etc/passwd etc/group etc/ssh etc/e5 etc/e5linux \
     etc/uhttpd.crt etc/uhttpd.key etc/vnstat etc/e5-infoscreen etc/e5-sms etc/unisoc-modem; do
     [ ! -e "$name" ] || settings="$settings $name"
 done

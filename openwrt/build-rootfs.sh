@@ -391,14 +391,14 @@ sed -i "s|and mods:find(\"nft_tproxy\")) then|and mods:find(\"nft_tproxy\")) or 
 grep -q "NFT_REDIR=y" $GLOBAL_LUA && grep -q "zcat /proc/config.gz" $GLOBAL_LUA || {
     echo "passwall2 global.lua component probe patch failed" >&2; exit 1; }
 echo "passwall2: dnsmasq-full installed, global.lua built-in nft probe patched"
-# SFTP for the stock dropbear: its built-in subsystem path is
-# /usr/libexec/sftp-server, which only this package provides.  Without it scp
-# works but sftp (and editors that save over it) fail with "subsystem request
-# failed".  140 KiB; the sshd is NOT swapped out -- that would take port 22 and
-# the LuCI SSH pages, which ask for /usr/sbin/dropbear.
-apk add openssh-sftp-server >/dev/null
+# SSH: OpenSSH replaces dropbear as the service on port 22 (dropbear has no
+# SFTP subsystem).  The dropbear package stays installed so the LuCI SSH pages
+# still probe /usr/sbin/dropbear, but its init link is dropped below; sshd
+# generates its host keys at first start (sshd.init).
+apk add openssh-server openssh-sftp-server >/dev/null
+[ -x /usr/sbin/sshd ] || { echo "openssh-server did not provide /usr/sbin/sshd" >&2; exit 1; }
 [ -x /usr/libexec/sftp-server ] || { echo "openssh-sftp-server did not provide /usr/libexec/sftp-server" >&2; exit 1; }
-echo "sftp: $(sed -n "/^P:openssh-sftp-server$/{n;s/^V://p}" /lib/apk/db/installed) for dropbear"
+echo "ssh: openssh-server $(sed -n "/^P:openssh-server$/{n;s/^V://p}" /lib/apk/db/installed), sftp $(sed -n "/^P:openssh-sftp-server$/{n;s/^V://p}" /lib/apk/db/installed)"
 # the info screen'"'"'s packages (cage, cog, Mesa, ...), when there is one
 if [ -f /in/infoscreen/packages.txt ]; then
     # (the transplant above: used when the repository has none of those packages)
@@ -509,11 +509,22 @@ rm -f $R/etc/rc.d/*pulseaudio
 # (the cage package'"'"'s own kiosk service: cog on http://localhost/, which is LuCI,
 # shown at every boot before the info screen'"'"'s session takes the panel)
 rm -f $R/etc/rc.d/*cage
-for s in e5-hw e5-vendor e5-modemd e5-sipc-wwan e5-telnetd e5-boot-ok e5-sms-notify e5-charge e5-apn-auto e5-network-recovery e5-luci e5-audio e5-voice-audio e5-hfp e5-bt bluetoothd dbus modemmanager e5-usb-watch ttyd $screen; do
+for s in e5-hw e5-vendor e5-modemd e5-sipc-wwan e5-telnetd e5-boot-ok e5-sms-notify e5-charge e5-apn-auto e5-network-recovery e5-luci e5-audio e5-voice-audio e5-hfp e5-bt bluetoothd dbus modemmanager e5-usb-watch ttyd sshd $screen; do
     n=$(sed -n "s/^START=//p" $R/etc/init.d/$s)
     ln -sf ../init.d/$s $R/etc/rc.d/S$n$s
 done
 ln -sf ../init.d/e5-modemd $R/etc/rc.d/K09e5-modemd
+# SSH took over from dropbear: remove the dropbear init link (if the package
+# made one) so sshd keeps port 22.  sshd_config allows root password logins
+# and the E5 root password is fixed to root below (LuCI -> Administration, or
+# passwd, to change it).
+rm -f $R/etc/rc.d/*dropbear
+printf "\n# E5: sshd on port 22, root password login\nPort 22\nPermitRootLogin yes\nPasswordAuthentication yes\n" >> $R/etc/ssh/sshd_config
+HASH=$(openssl passwd -6 root) || { echo "openssl passwd -6 failed" >&2; exit 1; }
+[ -n "$HASH" ] || { echo "openssl passwd produced no hash" >&2; exit 1; }
+sed -i "1s|^root:[^:]*:|root:$HASH:|" $R/etc/shadow
+grep -q "^root:[^:]" $R/etc/shadow || { echo "root shadow update failed" >&2; exit 1; }
+echo "ssh: root password set, dropbear init removed"
 # no kernel of its own
 rm -rf $R/lib/modules/* $R/boot
 arel=$(cat /in/sa/audio/release)
