@@ -6,12 +6,13 @@
 # What is staged, and why it is separate from the official feed:
 #
 #  * PassWall2 (luci-app-passwall2 + dependencies + zh-cn i18n), from the
-#    GitHub release Openwrt-Passwall/openwrt-passwall2 (26.10.20-1).  OpenWrt's
+#    GitHub release Openwrt-Passwall/openwrt-passwall2 (26.10.1-2).  OpenWrt's
 #    feeds do not carry it, so it is installed unsigned (--allow-untrusted).
-#    Since 26.10.20-1 the dependency bundle also carries the proxy cores it
-#    needs (xray-core 26.10.17 and sing-box 1.14.3), so no separate ELF
-#    download is needed -- their packages place them in usr/bin/ (PassWall2's
-#    default @global_app[0].xray_file/sing_box_file path).
+#    The 26.10.1-2 dependency bundle does NOT carry the proxy cores (they were
+#    only added from 26.10.20-1), so the exact E5-proven cores are fetched
+#    separately below and staged as bare ELFs into usr/bin/ (PassWall2's
+#    default @global_app[0].xray_file/sing_box_file path): xray-core 26.9.9
+#    and sing-box 1.14.3.
 #  * ZeroTier 1.16.0-r2 (the ImmortalWrt build that implements the
 #    fw_allow_* options the stock package drops) and its LuCI app + zh-cn
 #    translation, from the ImmortalWrt 25.12.2 aarch64_generic repository.
@@ -26,8 +27,8 @@ WORK="$TOP/work/openwrt"
 OUT="$WORK/preload"
 mkdir -p "$OUT"
 
-# PassWall2 -- GitHub release 26.10.20-1
-PW2_URL=https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.20-1
+# PassWall2 -- GitHub release 26.10.1-2
+PW2_URL=https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.1-2
 # ZeroTier + LuCI from ImmortalWrt 25.12.2 (aarch64_generic)
 IW_BASE=https://downloads.immortalwrt.org/releases/25.12.2/packages/aarch64_generic
 
@@ -42,17 +43,30 @@ fetch() { # url file sha256
 }
 
 # --- PassWall2 main package + zh-cn ---
-fetch "$PW2_URL/luci-app-passwall2-26.10.20-r1.apk" \
-    "$OUT/luci-app-passwall2-26.10.20-r1.apk" \
-    564f9dcd95a222dce565839e365ac89a1bbb9a4cc51aab1314086e7df509e59c
-fetch "$PW2_URL/luci-i18n-passwall2-zh-cn-26.10.20.apk" \
-    "$OUT/luci-i18n-passwall2-zh-cn-26.10.20.apk" \
-    e041d16af6d5b00dcc8b75026e226ecdbf7a66422fe8e8584c1dde72bd14d97a
+fetch "$PW2_URL/luci-app-passwall2-26.10.1-r2.apk" \
+    "$OUT/luci-app-passwall2-26.10.1-r2.apk" \
+    a2bc8c2bea2da3993691f306e5e752f03e50daf88fbc3ebd36af859cc28dd3d6
+fetch "$PW2_URL/luci-i18n-passwall2-zh-cn-26.10.1.apk" \
+    "$OUT/luci-i18n-passwall2-zh-cn-26.10.1.apk" \
+    6a5626a028a71b11d30093bed7bd5acb04f9840777f4f3b578b33fc3fb7737e8
 fetch "$PW2_URL/packages_apk_aarch64_generic.zip" \
     "$OUT/packages_apk_aarch64_generic.zip" \
-    38180070bc3789b1a496dcd1f73524f540d248c7d8114f04d9f96e2744b7d5f3
+    a4b54b33b13e293348e12751634ea6e044fc1d55325ab8facfd72db7ce71d9b6
 
-# --- proxy cores are bundled in the PassWall2 dependency zip above ---
+# --- proxy cores: not in the 26.10.1-2 dependency zip (only from 26.10.20-1),
+#     so fetch the exact E5-proven ELFs and stage them for /usr/bin ---
+XRAY_URL=https://github.com/XTLS/Xray-core/releases/download/v26.9.9
+SB_URL=https://github.com/SagerNet/sing-box/releases/download/v1.14.3
+fetch "$XRAY_URL/Xray-linux-arm64-v8a.zip" "$OUT/xray-26.9.9.zip" \
+    3e38d72dfc5eb65c91df0e5583e9b6676c32232041da47de6ae73946b526d66c
+fetch "$SB_URL/sing-box-1.14.3-linux-arm64.tar.gz" "$OUT/sing-box-1.14.3.tar.gz" \
+    29dae24d76bea3bc62d07dd3e60cfc12003de7debbd6b768df9be9c68360174e
+unzip -o "$OUT/xray-26.9.9.zip" -d "$OUT/xray2699" >/dev/null
+mv "$OUT/xray2699/xray" "$OUT/xray-26.9.9"
+rm -rf "$OUT/xray2699" "$OUT/xray-26.9.9.zip"
+tar -xzf "$OUT/sing-box-1.14.3.tar.gz" -C "$OUT"
+mv "$OUT/sing-box-1.14.3-linux-arm64/sing-box" "$OUT/sing-box-1.14.3"
+rm -rf "$OUT/sing-box-1.14.3-linux-arm64" "$OUT/sing-box-1.14.3.tar.gz"
 
 # --- ZeroTier + LuCI (ImmortalWrt) ---
 fetch "$IW_BASE/packages/zerotier-1.16.0-r2.apk" \
@@ -79,4 +93,4 @@ with zipfile.ZipFile(src) as z:
 print('%d apk extracted' % len([n for n in zipfile.ZipFile(src).namelist() if n.endswith('.apk')]))
 PY
 
-echo "preload staged: $(ls "$OUT"/*.apk | wc -l) apk + $(ls "$OUT/pw2deps"/*.apk | wc -l) pw2 deps (incl. xray-core + sing-box)"
+echo "preload staged: $(ls "$OUT"/*.apk | wc -l) apk + $(ls "$OUT/pw2deps"/*.apk | wc -l) pw2 deps + xray-26.9.9 + sing-box-1.14.3 ELFs"

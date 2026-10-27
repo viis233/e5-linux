@@ -361,16 +361,25 @@ done
 apk add --allow-untrusted $EXTRA_LIST >/dev/null
 echo "argon: $(sed -n "/^P:luci-theme-argon$/{n;s/^V://p}" /lib/apk/db/installed)"
 # Extra pre-installed software: PassWall2 with its dependencies, ZeroTier and
-# their LuCI apps.  The 26.10.20-1 dependency bundle carries the proxy cores
-# too (xray-core 26.10.17, sing-box 1.14.3), so the PassWall2 default
-# @global_app[0].xray_file / sing_box_file path in usr/bin is already served.
+# their LuCI apps.  The 26.10.1-2 dependency bundle does not carry the proxy
+# cores, so xray-26.9.9 and sing-box-1.14.3 are staged as ELFs below into the
+# PassWall2 default @global_app[0].xray_file / sing_box_file path in usr/bin.
+# The kernel builds nft redir/tproxy as loadable modules (=m, kmod-nft-*),
+# which are preinstalled so PassWall2's `lsmod` probe sees them directly.
 apk add --allow-untrusted /in/preload/pw2deps/*.apk \
-    /in/preload/luci-app-passwall2-26.10.20-r1.apk \
-    /in/preload/luci-i18n-passwall2-zh-cn-26.10.20.apk \
+    /in/preload/luci-app-passwall2-26.10.1-r2.apk \
+    /in/preload/luci-i18n-passwall2-zh-cn-26.10.1.apk \
     /in/preload/zerotier-1.16.0-r2.apk \
     /in/preload/luci-app-zerotier-26.236.50544~cb5d434.apk \
     /in/preload/luci-i18n-zerotier-zh-cn-26.236.50544~cb5d434.apk >/dev/null
 echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/installed) passwall2, $(sed -n "/^P:zerotier$/{n;s/^V://p}" /lib/apk/db/installed) zerotier"
+# PassWall2 needs the nft redir/tproxy/socket/nat as modules (kernel =m), and
+# its `lsmod` capability probe must see them loaded -- no LuCI patch needed.
+apk add kmod-nft-redir kmod-nft-tproxy kmod-nft-socket kmod-nft-nat >/dev/null
+# Stage the proxy cores into PassWall2's default usr/bin paths.
+install -m 755 /in/preload/xray-26.9.9 /usr/bin/xray
+install -m 755 /in/preload/sing-box-1.14.3 /usr/bin/sing-box
+[ -x /usr/bin/xray ] && /usr/bin/xray version | head -n 1
 # PassWall2'"'"'s dedicated dnsmasq instance needs nftset.  The stock slim
 # dnsmasq is built with no-nftset, so it aborts on the nftset= directive and
 # the DNS split plus node-name lookups break.  Install the full build (the
@@ -380,17 +389,6 @@ echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/insta
 apk add dnsmasq-full >/dev/null
 dnsmasq --version | grep -qw no-nftset && { echo "dnsmasq-full still lacks nftset support" >&2; exit 1; }
 dnsmasq --version | grep -qw nftset || { echo "dnsmasq-full lacks nftset support" >&2; exit 1; }
-# LuCI'"'"'s "Missing components, transparent proxy is unavailable" is a false
-# alarm on this kernel: PassWall2 detects the feature with `lsmod`, but the E5
-# kernel compiles nft redir/tproxy into nf_tables (no module unit, so neither
-# lsmod nor /sys/module lists them).  Feed the probe the built-in kernel
-# config as a second source; module-based kernels still match on lsmod.
-GLOBAL_LUA=/usr/lib/lua/luci/model/cbi/passwall2/client/global.lua
-sed -i "s|io.popen(\"lsmod\")|io.popen(\"lsmod; zcat /proc/config.gz 2>/dev/null\")|" $GLOBAL_LUA
-sed -i "s|and mods:find(\"nft_tproxy\")) then|and mods:find(\"nft_tproxy\")) or (mods:find(\"NFT_REDIR=y\") and mods:find(\"NFT_TPROXY=y\")) then|" $GLOBAL_LUA
-grep -q "NFT_REDIR=y" $GLOBAL_LUA && grep -q "zcat /proc/config.gz" $GLOBAL_LUA || {
-    echo "passwall2 global.lua component probe patch failed" >&2; exit 1; }
-echo "passwall2: dnsmasq-full installed, global.lua built-in nft probe patched"
 # SSH: OpenSSH replaces dropbear as the service on port 22 (dropbear has no
 # SFTP subsystem).  The dropbear package stays installed so the LuCI SSH pages
 # still probe /usr/sbin/dropbear, but its init link is dropped below; sshd
