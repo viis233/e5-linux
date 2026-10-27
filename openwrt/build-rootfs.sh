@@ -365,7 +365,7 @@ echo "argon: $(sed -n "/^P:luci-theme-argon$/{n;s/^V://p}" /lib/apk/db/installed
 # cores, so xray-26.9.9 and sing-box-1.14.3 are staged as ELFs below into the
 # PassWall2 default @global_app[0].xray_file / sing_box_file path in usr/bin.
 # The kernel builds nft redir/tproxy as loadable modules (=m, kmod-nft-*),
-# which are preinstalled so PassWall2's `lsmod` probe sees them directly.
+# which are preinstalled so the PassWall2 `lsmod` probe sees them directly.
 apk add --allow-untrusted /in/preload/pw2deps/*.apk \
     /in/preload/luci-app-passwall2-26.10.1-r2.apk \
     /in/preload/luci-i18n-passwall2-zh-cn-26.10.1.apk \
@@ -376,7 +376,7 @@ echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/insta
 # PassWall2 needs the nft redir/tproxy/socket/nat as modules (kernel =m), and
 # its `lsmod` capability probe must see them loaded -- no LuCI patch needed.
 apk add kmod-nft-redir kmod-nft-tproxy kmod-nft-socket kmod-nft-nat >/dev/null
-# Stage the proxy cores into PassWall2's default usr/bin paths.
+# Stage the proxy cores into the PassWall2 default usr/bin paths.
 install -m 755 /in/preload/xray-26.9.9 /usr/bin/xray
 install -m 755 /in/preload/sing-box-1.14.3 /usr/bin/sing-box
 [ -x /usr/bin/xray ] && /usr/bin/xray version | head -n 1
