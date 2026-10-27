@@ -377,8 +377,8 @@ echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/insta
 # They are staged into the rootfs by the kernel root-modules pass and
 # preloaded via /etc/modules.d below -- no kmod apk exists for the E5 kernel.
 # Stage the proxy cores into the PassWall2 default usr/bin paths.
-install -m 755 /in/preload/xray-26.9.9 /usr/bin/xray
-install -m 755 /in/preload/sing-box-1.14.3 /usr/bin/sing-box
+cp /in/preload/xray-26.9.9 /usr/bin/xray && chmod 755 /usr/bin/xray
+cp /in/preload/sing-box-1.14.3 /usr/bin/sing-box && chmod 755 /usr/bin/sing-box
 [ -x /usr/bin/xray ] && /usr/bin/xray version | head -n 1
 # PassWall2'"'"'s dedicated dnsmasq instance needs nftset.  The stock slim
 # dnsmasq is built with no-nftset, so it aborts on the nftset= directive and
