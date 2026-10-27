@@ -373,9 +373,9 @@ apk add --allow-untrusted /in/preload/pw2deps/*.apk \
     /in/preload/luci-app-zerotier-26.236.50544~cb5d434.apk \
     /in/preload/luci-i18n-zerotier-zh-cn-26.236.50544~cb5d434.apk >/dev/null
 echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/installed) passwall2, $(sed -n "/^P:zerotier$/{n;s/^V://p}" /lib/apk/db/installed) zerotier"
-# PassWall2 needs the nft redir/tproxy/socket/nat as modules (kernel =m), and
-# its `lsmod` capability probe must see them loaded -- no LuCI patch needed.
-apk add kmod-nft-redir kmod-nft-tproxy kmod-nft-socket kmod-nft-nat >/dev/null
+# PassWall2 needs the nft redir/tproxy/socket/nat as modules (kernel =m).
+# They are staged into the rootfs by the kernel root-modules pass and
+# preloaded via /etc/modules.d below -- no kmod apk exists for the E5 kernel.
 # Stage the proxy cores into the PassWall2 default usr/bin paths.
 install -m 755 /in/preload/xray-26.9.9 /usr/bin/xray
 install -m 755 /in/preload/sing-box-1.14.3 /usr/bin/sing-box
@@ -528,6 +528,10 @@ rm -rf $R/lib/modules/* $R/boot
 arel=$(cat /in/sa/audio/release)
 mkdir -p $R/lib/modules/$arel/audio && cp /in/sa/audio/*.ko $R/lib/modules/$arel/audio/
 cp -a /in/root-modules/. $R/ && chown -R 0:0 $R/lib/modules
+# nft redir/tproxy/socket/nat are built as modules (=m); preload them so the
+# PassWall2 lsmod probe and nft rule generation see them loaded.
+mkdir -p $R/etc/modules.d
+for m in nft_redir nft_tproxy nft_socket nft_nat nft_masq; do echo "$m" > $R/etc/modules.d/e5-nft-$m; done
 if [ -n "$STANDALONE" ]; then
     # the device'"'"'s own files, where the directory form binds the Debian root'"'"'s
     cp -a /in/sa/firmware/. $R/lib/firmware/
