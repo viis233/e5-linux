@@ -523,6 +523,9 @@ HASH=$(openssl passwd -6 root) || { echo "openssl passwd -6 failed" >&2; exit 1;
 sed -i "1s|^root:[^:]*:|root:$HASH:|" $R/etc/shadow
 grep -q "^root:[^:]" $R/etc/shadow || { echo "root shadow update failed" >&2; exit 1; }
 echo "ssh: root password set, dropbear init removed"
+# SSH host keys are device-specific and must not bake into a generic image
+# (ci-release.py rejects them); sshd generates them at first boot.
+rm -f $R/etc/ssh/ssh_host_*_key $R/etc/ssh/ssh_host_*_key.pub
 # no kernel of its own
 rm -rf $R/lib/modules/* $R/boot
 arel=$(cat /in/sa/audio/release)
