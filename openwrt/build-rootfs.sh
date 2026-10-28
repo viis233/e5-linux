@@ -498,6 +498,9 @@ rm -f $R/etc/ssh/ssh_host_*_key $R/etc/ssh/ssh_host_*_key.pub
 # PassWall2 lsmod probe sees them (no kmod apk exists for the E5 kernel)
 mkdir -p $R/etc/modules.d
 for m in nft_redir nft_tproxy nft_socket nft_nat nft_masq; do echo "$m" > $R/etc/modules.d/e5-nft-$m; done
+# flock installs as /usr/bin/util-linux-flock; provide the /usr/bin/flock name
+# the install-lock tooling expects (alternatives do not run inside the build)
+ln -sf util-linux-flock $R/usr/bin/flock
 # no kernel of its own
 rm -rf $R/lib/modules/* $R/boot
 arel=$(cat /in/sa/audio/release)
