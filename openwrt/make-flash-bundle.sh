@@ -102,6 +102,16 @@ bad=$(cat "$S0/files" |
       grep -E 'lib/firmware/(wcnmodem|gnssmodem|l_agdsp|wifi_board|sprd/)|opt/e5/android/.|etc/e5/install\.conf|mnt/vendor/.|attendedsysupgrade' || true)
 [ -z "$bad" ] || { echo "the generic image carries what it must not (device files, attended sysupgrade):" >&2; echo "$bad" | head >&2; exit 1; }
 
+# The early F2FS repair tools (fsck.f2fs, resize.f2fs, ucode) are staged from
+# the E5 rootfs (build-rootfs.sh installs f2fs-tools) into out/boot/f2fs-tools;
+# build-boot-image.py reads them for the boot image.
+echo "== staging the early F2FS tools"
+if [ ! -f "$TOP/out/boot/f2fs-tools/manifest.json" ]; then
+    rm -rf "$WORK/f2fs-root" && mkdir -p "$WORK/f2fs-root"
+    tar -xzf "$WORK/e5-openwrt-$VER-generic-rootfs.tar.gz" -C "$WORK/f2fs-root"
+    python3 "$TOP/boot/prepare-f2fs-tools.py" --root "$WORK/f2fs-root"
+fi
+
 echo "== boot image without the overlay"
 BOOT="$TOP/work/boot-linux-slotb-bundle"
 if [ -n "$MAINLINE" ]; then

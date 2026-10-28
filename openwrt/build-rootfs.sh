@@ -302,7 +302,7 @@ docker run --rm --platform linux/arm64 \
 mkdir -p /var/lock /var/run /tmp
 apk update >/dev/null
 apk add --allow-untrusted /in/block-mount-guarded.apk >/dev/null
-apk add e2fsprogs resize2fs >/dev/null
+apk add e2fsprogs resize2fs f2fs-tools >/dev/null
 # ModemManager first, from its local file (unsigned): its release is above the
 # repository one, so what depends on it takes this one and apk upgrade keeps it
 apk add --allow-untrusted /in/apk/modemmanager-1*.apk /in/apk/modemmanager-rpcd-*.apk >/dev/null
