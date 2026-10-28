@@ -109,6 +109,10 @@ BLOCK_APK="$OUT/block-mount-guarded.apk"
 E5_WRT_VER="$VER" sh "$HERE/build-block-mount.sh" "$BLOCK_APK"
 WIFI_APKS="$TOP/work/wifi-sae"
 UNISOC_WRT_VER="$VER" sh "$HERE/build-hostapd.sh" "$WIFI_APKS"
+# Extra pre-installed software (PassWall2 + proxy cores + ZeroTier/LuCI):
+# staged to work/openwrt/preload (see openwrt/build-preload.sh for the pins).
+PRELOAD="$WORK/preload"
+bash "$HERE/build-preload.sh"
 
 # the Argon theme: not in OpenWrt's feeds; its release's packages (arch all)
 ARGON_URL=https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.7
@@ -290,6 +294,7 @@ docker run --rm --platform linux/arm64 \
     -v "$BLOCK_APK":/in/block-mount-guarded.apk:ro \
     -v "$BLOCK_APK.build-id":/in/block-mount.build-id:ro \
     -v "$WIFI_APKS":/in/wifi-sae:ro \
+    -v "$PRELOAD":/in/preload:ro \
     -v "$SA":/in/sa:ro -e STANDALONE="$STANDALONE" -v "$RM":/in/root-modules:ro \
     -v "$WORK/extra":/in/extra:ro -e EXTRA_LIST="$EXTRA_LIST" -v "$TP":/in/transplant:ro \
     -v "$TAROUT":/out -e NAME="$NAME" -e VERSION="$VERSION" -e E5_BUILD_EPOCH="${E5_BUILD_EPOCH:-}" -e CONTAINERS="$CONTAINERS" \
@@ -335,6 +340,32 @@ done
 # the Argon theme (its release'"'"'s packages, unsigned)
 apk add --allow-untrusted $EXTRA_LIST >/dev/null
 echo "argon: $(sed -n "/^P:luci-theme-argon$/{n;s/^V://p}" /lib/apk/db/installed)"
+# Extra pre-installed software: PassWall2 with its dependencies, ZeroTier and
+# its LuCI app, and the proxy cores -- staged by build-preload.sh (URL+SHA pinned)
+apk add --allow-untrusted /in/preload/pw2deps/*.apk \
+    /in/preload/luci-app-passwall2-26.10.1-r2.apk \
+    /in/preload/luci-i18n-passwall2-zh-cn-26.10.1.apk \
+    /in/preload/zerotier-1.16.0-r2.apk \
+    /in/preload/luci-app-zerotier-26.236.50544~cb5d434.apk \
+    /in/preload/luci-i18n-zerotier-zh-cn-26.236.50544~cb5d434.apk >/dev/null
+echo "preload: $(sed -n "/^P:luci-app-passwall2$/{n;s/^V://p}" /lib/apk/db/installed) passwall2, $(sed -n "/^P:zerotier$/{n;s/^V://p}" /lib/apk/db/installed) zerotier"
+# the proxy cores into PassWall2'"'"'s default @global_app[0].xray_file / sing_box_file
+# path (usr/bin); the lsmod probe also needs the kernel nft modules below
+cp /in/preload/xray-26.9.9 /usr/bin/xray && chmod 755 /usr/bin/xray
+cp /in/preload/sing-box-1.14.3 /usr/bin/sing-box && chmod 755 /usr/bin/sing-box
+# PassWall2'"'"'s dedicated dnsmasq instance needs nftset; the stock slim dnsmasq
+# is built with no-nftset, so it aborts on the nftset= directive
+apk add dnsmasq-full >/dev/null
+dnsmasq --version | grep -qw no-nftset && { echo "dnsmasq-full still lacks nftset support" >&2; exit 1; }
+dnsmasq --version | grep -qw nftset || { echo "dnsmasq-full lacks nftset support" >&2; exit 1; }
+# SSH: OpenSSH replaces dropbear as the service on port 22 (dropbear has no
+# SFTP subsystem).  The dropbear package stays installed so the LuCI SSH pages
+# still probe /usr/sbin/dropbear; its init link is dropped below; sshd
+# generates its host keys at first start.
+apk add openssh-server openssh-sftp-server >/dev/null
+[ -x /usr/sbin/sshd ] || { echo "openssh-server did not provide /usr/sbin/sshd" >&2; exit 1; }
+[ -x /usr/libexec/sftp-server ] || { echo "openssh-sftp-server did not provide /usr/libexec/sftp-server" >&2; exit 1; }
+echo "ssh: openssh-server $(sed -n "/^P:openssh-server$/{n;s/^V://p}" /lib/apk/db/installed), sftp $(sed -n "/^P:openssh-sftp-server$/{n;s/^V://p}" /lib/apk/db/installed)"
 # the info screen'"'"'s packages (cage, cog, Mesa, ...), when there is one
 if [ -f /in/infoscreen/packages.txt ]; then
     # (the transplant above: used when the repository has none of those packages)
@@ -445,12 +476,28 @@ rm -f $R/etc/rc.d/*pulseaudio
 # (the cage package'"'"'s own kiosk service: cog on http://localhost/, which is LuCI,
 # shown at every boot before the info screen'"'"'s session takes the panel)
 rm -f $R/etc/rc.d/*cage
-for s in e5-hw e5-vendor e5-modemd e5-sipc-wwan e5-telnetd e5-boot-ok e5-sms-notify e5-charge unisoc-battery e5-apn-auto e5-network-recovery e5-mm-state e5-luci e5-audio e5-voice-audio e5-hfp e5-bt bluetoothd dbus modemmanager e5-usb-watch ttyd $screen; do
+for s in e5-hw e5-vendor e5-modemd e5-sipc-wwan e5-telnetd e5-boot-ok e5-sms-notify e5-charge unisoc-battery e5-apn-auto e5-network-recovery e5-mm-state e5-luci e5-audio e5-voice-audio e5-hfp e5-bt bluetoothd dbus modemmanager e5-usb-watch ttyd sshd $screen; do
     n=$(sed -n "s/^START=//p" $R/etc/init.d/$s)
     ln -sf ../init.d/$s $R/etc/rc.d/S$n$s
 done
 ln -sf ../init.d/e5-modemd $R/etc/rc.d/K09e5-modemd
 ln -sf ../init.d/unisoc-battery $R/etc/rc.d/K08unisoc-battery
+# SSH took over from dropbear: remove the dropbear init link (if the package
+# made one) so sshd keeps port 22.  sshd_config allows root password logins
+rm -f $R/etc/rc.d/*dropbear
+printf "\n# E5: sshd on port 22, root password login\nPort 22\nPermitRootLogin yes\nPasswordAuthentication yes\n" >> $R/etc/ssh/sshd_config
+HASH=$(openssl passwd -6 root) || { echo "openssl passwd -6 failed" >&2; exit 1; }
+[ -n "$HASH" ] || { echo "openssl passwd produced no hash" >&2; exit 1; }
+sed -i "1s|^root:[^:]*:|root:$HASH:|" $R/etc/shadow
+grep -q "^root:[^:]" $R/etc/shadow || { echo "root shadow update failed" >&2; exit 1; }
+echo "ssh: root password set, dropbear init removed"
+# SSH host keys are device-specific and must not bake into a generic image
+# (ci-release.py rejects them); sshd generates them at first boot.
+rm -f $R/etc/ssh/ssh_host_*_key $R/etc/ssh/ssh_host_*_key.pub
+# nft redir/tproxy/socket/nat are built as modules (=m); preload them so the
+# PassWall2 lsmod probe sees them (no kmod apk exists for the E5 kernel)
+mkdir -p $R/etc/modules.d
+for m in nft_redir nft_tproxy nft_socket nft_nat nft_masq; do echo "$m" > $R/etc/modules.d/e5-nft-$m; done
 # no kernel of its own
 rm -rf $R/lib/modules/* $R/boot
 arel=$(cat /in/sa/audio/release)
