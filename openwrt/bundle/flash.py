@@ -953,7 +953,7 @@ def install_sd(a):
   第一次启动约 2 分钟 / the first boot takes about 2 minutes.
   OpenWrt 在 SD 卡上 / OpenWrt is on the SD card ({part}).
   热点 / hotspot:  {ssid}   密码 / key:  {key}
-  管理 / admin:    http://192.168.9.1  (LuCI, root / root -- 请改密码 / change it)
+  管理 / admin:    http://10.0.55.1  (LuCI, root / root -- 请改密码 / change it)
   回 Android:      屏幕 高级 -> 系统 -> 下次启动 Android, or: e5-next-boot android; reboot
   若启动失败，设备会在两次尝试后自动回到 Android。
   If the boot fails, the E5 falls back to Android after two tries.''')
@@ -1182,7 +1182,7 @@ def install(a):
     print(f'''
   第一次启动约 2 分钟 / the first boot takes about 2 minutes.
   热点 / hotspot:  {ssid}   密码 / key:  {key}
-  管理 / admin:    http://192.168.9.1  (LuCI, root / root -- 请改密码 / change it)
+  管理 / admin:    http://10.0.55.1  (LuCI, root / root -- 请改密码 / change it)
   回 Android:      屏幕 高级 -> 系统 -> 下次启动 Android, or: e5-next-boot android; reboot
   若启动失败，设备会在两次尝试后自动回到 Android。
   If the boot fails, the E5 falls back to Android after two tries.''')
@@ -1374,7 +1374,7 @@ def install_part(a):
   The next boot shrinks userdata, creates the e5root partition and writes
   OpenWrt into it, then restarts once into it -- about a few minutes.
   热点 / hotspot:  {ssid}   密码 / key:  {key}
-  管理 / admin:    http://192.168.9.1  (LuCI, root / root -- 请改密码 / change it)
+  管理 / admin:    http://10.0.55.1  (LuCI, root / root -- 请改密码 / change it)
   回 Android:      e5-next-boot android（或删掉 {D}/boot-os）后重启；首启是试启动，
   失败会回到 Android。If the first boot fails, the next one falls back.''')
 
@@ -1439,13 +1439,13 @@ def local_ip(host):
 
 def update(a):
     if GUI: return GUI.update_e5(a)
-    host = os.environ.get('E5_HOST', '192.168.9.1')
+    host = os.environ.get('E5_HOST', '10.0.55.1')
     try:
         ip = local_ip(host)
     except OSError:
         ip = ''
-    if not ip.startswith('192.168.9.') and not ip.startswith('192.168.77.'):
-        die("no address on the E5's USB LAN (192.168.9.x): is it connected and running OpenWrt?")
+    if not ip.startswith('10.0.55.') and not ip.startswith('192.168.77.'):
+        die("no address on the E5's USB LAN (10.0.55.x): is it connected and running OpenWrt?")
     pw = os.environ.get('E5_TELNET_PASS')
     if pw is None and (a.y or not sys.stdin.isatty()):
         pw = 'root'     # (-y: the default, not asked)

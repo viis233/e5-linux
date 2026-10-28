@@ -24,7 +24,7 @@ IMG=$1
 BASE=${IMG%.img}
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/.." && pwd)
-HOST=${E5_HOST:-192.168.9.1}
+HOST=${E5_HOST:-10.0.55.1}
 HTTP_PORT=${E5_HTTP_PORT:-8778}
 TELNET="$ROOT/tools/e5-telnet.py"
 
@@ -58,11 +58,11 @@ BOOTB=$(dev "for u in /sys/class/block/mmcblk*p*/uevent; do grep -qx PARTNAME=bo
 echo "   boot_$LINUX_SLOT = $BOOTB"
 
 # The host address on the LAN is whatever the device's DHCP server handed out,
-# so ask the interface rather than hard-coding it: 192.168.9.x from br0, or
+# so ask the interface rather than hard-coding it: 10.0.55.x from br0, or
 # 192.168.77.x while the host still holds the initramfs's rescue-mode lease.
-LOCAL_IP=$(ifconfig 2>/dev/null | awk '/inet 192\.168\.9\./{print $2; exit}')
+LOCAL_IP=$(ifconfig 2>/dev/null | awk '/inet 10\.0\.55\./{print $2; exit}')
 [ -n "$LOCAL_IP" ] || LOCAL_IP=$(ifconfig 2>/dev/null | awk '/inet 192\.168\.77\./{print $2; exit}')
-[ -n "$LOCAL_IP" ] || { echo "host has no address on the device's LAN (192.168.9.0/24)" >&2; exit 1; }
+[ -n "$LOCAL_IP" ] || { echo "host has no address on the device's LAN (10.0.55.0/24)" >&2; exit 1; }
 
 SERVEDIR=$(mktemp -d)
 trap 'kill "${HTTP_PID:-0}" 2>/dev/null || true; rm -rf "$SERVEDIR"' EXIT

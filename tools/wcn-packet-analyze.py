@@ -131,7 +131,7 @@ def analyze(blob, server, port):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--firmware", type=Path, required=True)
-    parser.add_argument("--server", default="192.168.9.1", type=ipaddress.IPv4Address)
+    parser.add_argument("--server", default="10.0.55.1", type=ipaddress.IPv4Address)
     parser.add_argument("--port", default=5201, type=int)
     parser.add_argument("--output", type=Path)
     parser.add_argument("logs", nargs="+", type=Path)

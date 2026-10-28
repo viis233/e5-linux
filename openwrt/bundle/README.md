@@ -110,9 +110,9 @@ What it does:
 ## Using it
 
 * Hotspot: the name and key set while flashing; or the USB cable (USB network).
-* LuCI (Aurora theme; System -> System -> Language and Style): `http://192.168.9.1`, user `root`, password `root` -- **change it**
+* LuCI (Aurora theme; System -> System -> Language and Style): `http://10.0.55.1`, user `root`, password `root` -- **change it**
   (LuCI -> System -> Administration, or `passwd` over SSH).
-* SSH: `ssh root@192.168.9.1`.
+* SSH: `ssh root@10.0.55.1`.
 * The panel: left/right turn the pages, confirm presses, back goes back; 高级
   (Settings) has the network mode, bands, APN, charge control and more.
 

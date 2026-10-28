@@ -42,7 +42,7 @@ IMG=${1:-$(ls -t "$TOP"/out/openwrt/e5-openwrt-*.ext4.gz 2>/dev/null | head -1)}
 echo "== $(basename "$IMG") ($(du -h "$IMG" | cut -f1))"
 
 if [ -z "$ADB" ]; then
-    IP=${E5_HOST_IP:-192.168.9.2}
+    IP=${E5_HOST_IP:-10.0.55.2}
     PORT=${E5_HTTP_PORT:-8791}
     SERVE=$(mktemp -d)
     trap 'kill $SRV 2>/dev/null; rm -rf "$SERVE"' EXIT

@@ -39,7 +39,7 @@ check(a.change(c,'delete',{id},reload).error=='apn_current','active delete denie
 r=a.change(c,'apply',{id:'automatic'},reload);check(r.ok && calls==2,'SIM default applies');
 c=cursor(dir,dir+'/delta');check(!c.get('network','wan','apn'),'old APN cleared');
 r=a.change(c,'delete',{id},reload);check(r.ok && calls==2,'inactive deleted without reconnect');
-c.set('network','lan','ipaddr','192.168.9.1');c.save('network');
+c.set('network','lan','ipaddr','10.0.55.1');c.save('network');
 c=cursor(dir,dir+'/delta');r=a.change(c,'apply',{id:'automatic'},reload);
 check(r.error=='apn_unsaved' && calls==2,'pending user changes protected');
 c.revert('network');

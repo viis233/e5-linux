@@ -477,7 +477,7 @@ class Service:
         manual = r['choices']['method'] != 'update' and not (
             r['package']['adapter'] == 'e5' and r['choices']['method'] == 'boot')
         manual = manual and not r.get('openwrt_confirmed',False)
-        host = r['choices'].get('host') or ('192.168.9.1' if r['package']['adapter'] == 'e5' else
+        host = r['choices'].get('host') or ('10.0.55.1' if r['package']['adapter'] == 'e5' else
                 '192.168.77.1')
         context.stage('openwrt_boot', 'waiting_user' if manual or error else 'waiting_device',
                       host=host, reboot_manually=manual, boot_confirmed=bool(r.get('openwrt_confirmed')),
@@ -486,7 +486,7 @@ class Service:
     def wait_openwrt(self, context, adapter):
         import paramiko
         r = context.record
-        host = r['choices'].get('host') or ('192.168.9.1' if r['package']['adapter'] == 'e5' else
+        host = r['choices'].get('host') or ('10.0.55.1' if r['package']['adapter'] == 'e5' else
                 '192.168.77.1')
         # No network/interface changes and no automatic hotspot connection.
         while True:

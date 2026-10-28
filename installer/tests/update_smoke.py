@@ -20,7 +20,7 @@ def main():
         now=time.time()
         def event(**change):page.evaluate('change=>window.__emitFixture(change)',change)
         event(stage='openwrt_boot',status='waiting_device',revision=10,stage_started_at=now-3,
-              details={'host':'192.168.9.1','reboot_manually':False})
+              details={'host':'10.0.55.1','reboot_manually':False})
         settle(page);layout(page)
         assert page.locator('h1').inner_text()=='更新已提交，设备将自动重启'
         assert '自动重启以应用更新' in page.locator('.boot-guidance').inner_text()
@@ -30,7 +30,7 @@ def main():
         assert page.locator('.elapsed').inner_text()!=before
         page.screenshot(path=str(ROOT/'screenshots/update-reboot-zh.png'))
         event(stage='openwrt_boot',status='waiting_device',revision=11,
-              details={'host':'192.168.9.1','reboot_manually':False,'connection_state':'reconnecting','verification_error':None})
+              details={'host':'10.0.55.1','reboot_manually':False,'connection_state':'reconnecting','verification_error':None})
         settle(page);layout(page)
         assert page.locator('h1').inner_text()=='设备正在重启，等待重新连接'
         assert page.locator('.verification-error').count()==0
@@ -45,7 +45,7 @@ def main():
         for index,status in enumerate(('completed','failed','cancelled')):
             event(stage='complete' if status=='completed' else 'verify_capacity',status=status,revision=20+index,
                   stage_started_at=now-9,stage_finished_at=now-1,updated=now-1,
-                  result={'filesystem_bytes':10737418240,'url':'http://192.168.9.1'})
+                  result={'filesystem_bytes':10737418240,'url':'http://10.0.55.1'})
             settle(page)
             assert page.locator('.elapsed').inner_text()=='阶段用时 8s'
             page.wait_for_timeout(1300)

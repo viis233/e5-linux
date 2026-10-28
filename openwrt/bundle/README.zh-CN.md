@@ -103,9 +103,9 @@ Windows 双击 `launchers/install-to-internal-storage.cmd`，Linux/macOS 运行 
 此后的重装或改大小，在运行中的 OpenWrt 里用 `device-install-to-internal-storage.sh`。
 
 * 热点：用刷机时设置的名称和密码连接；或用 USB 线连接电脑（USB 网卡）。
-* 管理页面 LuCI（中文、Aurora 主题）：`http://192.168.9.1`，用户 `root`，密码 `root`，**请尽快修改**
+* 管理页面 LuCI（中文、Aurora 主题）：`http://10.0.55.1`，用户 `root`，密码 `root`，**请尽快修改**
   （LuCI → 系统 → 管理权，或 SSH 里运行 `passwd`）。
-* SSH：`ssh root@192.168.9.1`。
+* SSH：`ssh root@10.0.55.1`。
 * 屏幕：左右键翻页，确认键按按钮，返回键返回；“高级”里有网络模式、频段、APN、充电控制等设置。
 
 ## 回到 Android

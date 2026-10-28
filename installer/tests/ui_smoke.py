@@ -38,7 +38,7 @@ BRIDGE=r"""
      case 'probe':return {...device,...window.__fixture.probed,serial:args.params.serial};
      case 'plan':Object.assign(tx,{choices:{...args.params.choices},device:{...device,...window.__fixture.probed,serial:args.params.serial},plan:{...tx.plan,method:args.params.choices.method,wipe:args.params.choices.method==='part',two_stage:args.params.choices.method==='part',offline:args.params.choices.method==='part',target:args.params.choices.method==='reinstall'?'mmcblk1p20':'userdata shrink'}});return {...tx};
      case 'list':return window.__fixture.records;
-     case 'start':if(window.__fixture.startRace){const older={...tx,stage:'android_setup',status:'waiting_user',revision:1};window.__emitFixture({stage:'complete',status:'completed',revision:2,result:{filesystem_bytes:10737418240,url:'http://192.168.9.1'}});return older;}tx.stage='android_setup';tx.status='waiting_user';return {...tx};
+     case 'start':if(window.__fixture.startRace){const older={...tx,stage:'android_setup',status:'waiting_user',revision:1};window.__emitFixture({stage:'complete',status:'completed',revision:2,result:{filesystem_bytes:10737418240,url:'http://10.0.55.1'}});return older;}tx.stage='android_setup';tx.status='waiting_user';return {...tx};
      case 'cancel':return {accepted:window.__fixture.cancelAccepted ?? true,deferred:false};
      case 'verify_openwrt':return {accepted:true};
      case 'diagnostics':return {text:'DEBUG fixture diagnostics: commands, traceback and verified bytes (redacted)'};
@@ -120,7 +120,7 @@ def main():
         for _ in range(8):page.evaluate("window.__emitFixture({stage:'root_permission',status:'waiting_user'})")
         assert page.locator('[data-sonner-toast][data-type=info]').filter(has_text='Allow the root request').count()==1
         page.screenshot(path=str(out/'wait-root-dark-en.png'),full_page=True)
-        page.evaluate("window.__emitFixture({stage:'complete',status:'completed',result:{filesystem_bytes:10737418240,url:'http://192.168.9.1',backup_directory:'fixture'}})")
+        page.evaluate("window.__emitFixture({stage:'complete',status:'completed',result:{filesystem_bytes:10737418240,url:'http://10.0.55.1',backup_directory:'fixture'}})")
         page.get_by_role('heading',name='OpenWrt installed and verified').wait_for()
         assert 'username root, default password root' in page.locator('.success-panel .login-hint').inner_text()
         settle(page);layout(page)

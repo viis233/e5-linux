@@ -34,7 +34,7 @@ errors before retrying; they identify the failing stage and device response.
 
 ## Use
 
-- USB management LAN: device **192.168.9.1**, host normally **192.168.9.2**.
+- USB management LAN: device **10.0.55.1**, host normally **10.0.55.2**.
   USB and hotspot share `br-lan`. The WAN supports IPv4/IPv6 through ModemManager.
 - **Info screen → Apps → Phone:** dialer and contacts on one screen. Phone 1.5
   selects the outgoing SIM and labels the origin of incoming calls. Ring sound,

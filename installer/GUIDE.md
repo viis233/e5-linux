@@ -106,7 +106,7 @@ Diff Studio 的旧版输入可选择完整 ZIP，也可选择之前保存的 `.o
 
 需要手动重启时，页面会提示“请现在手动重启设备”；已在重启或已进入 OpenWrt 时，不必重复重启。进入 OpenWrt 后，将电脑连接到目标设备的 USB 网络或热点，核对管理地址和 SSH root 密码，再点击“我已进入 OpenWrt，开始校验”。连接了多台 OpenWrt 时，注意默认地址冲突，确认电脑访问的是目标设备。
 
-看到完成页面后，按显示的管理地址访问设备，检查服务并修改管理员与无线密码。E5/M8/T551M 默认地址为 `http://192.168.9.1`，MU300/F50/V50/U30Air 为 `http://192.168.77.1`；修改过地址时使用实际值。保留安装记录和备份，以便后续恢复。
+看到完成页面后，按显示的管理地址访问设备，检查服务并修改管理员与无线密码。E5/M8/T551M 默认地址为 `http://10.0.55.1`，MU300/F50/V50/U30Air 为 `http://192.168.77.1`；修改过地址时使用实际值。保留安装记录和备份，以便后续恢复。
 
 **全新安装的管理页面和 SSH 登录用户名为 `root`，默认密码为 `root`。** 登录后请修改密码。更新会保留原密码；之前改过密码的设备，请使用当前密码。
 
@@ -240,7 +240,7 @@ A file reaching 100% may still be followed by firmware preparation, installation
 
 When asked to restart manually, use the device’s normal restart control. Do not restart again if it is already restarting or running OpenWrt. Connect the computer to the intended device’s USB network or hotspot, check the management address and SSH root password, then select OpenWrt is running — verify now. With several routers connected, check for conflicting default addresses and make sure you are reaching the intended device.
 
-After completion, open the management address shown, check services and change administrator and wireless passwords. Default addresses are `http://192.168.9.1` for E5/M8/T551M and `http://192.168.77.1` for MU300/F50/V50/U30Air. Use the actual address if changed. Keep the installation record and backups for recovery.
+After completion, open the management address shown, check services and change administrator and wireless passwords. Default addresses are `http://10.0.55.1` for E5/M8/T551M and `http://192.168.77.1` for MU300/F50/V50/U30Air. Use the actual address if changed. Keep the installation record and backups for recovery.
 
 **A fresh installation uses username `root` and default password `root` for the management page and SSH.** Change the password after signing in. Updates preserve the existing password; use the current password if it has been changed.
 

@@ -25,7 +25,7 @@ function Studio() {
   const [old,setOld] = useState(''), [next,setNext] = useState('');
   const [analysis,setAnalysis] = useState<Analysis>();
   const [patch,setPatch] = useState(''), [manifest,setManifest] = useState<Manifest>();
-  const [host,setHost] = useState('192.168.9.1'), [password,setPassword] = useState('');
+  const [host,setHost] = useState('10.0.55.1'), [password,setPassword] = useState('');
   const [busy,setBusy] = useState(false), [progress,setProgress] = useState('');
   const [error,setError] = useState(''), [success,setSuccess] = useState('');
   const [review,setReview] = useState<Review>(), [running,setRunning] = useState(false);
@@ -112,7 +112,7 @@ function Studio() {
     setReview(undefined);setAnalysis(undefined);setSuccess('');setRebootReady(false);
     if (which === 'old') setOld(path);
     else if (which === 'new') setNext(path);
-    else { setPatch(path);setManifest(undefined); const r=await work(()=>request<{manifest:Manifest}>('ota_package',{path})); if(r){setManifest(r.manifest);if(host==='192.168.9.1'||host==='192.168.77.1')setHost(r.manifest.family==='mu300'?'192.168.77.1':'192.168.9.1');} }
+    else { setPatch(path);setManifest(undefined); const r=await work(()=>request<{manifest:Manifest}>('ota_package',{path})); if(r){setManifest(r.manifest);if(host==='10.0.55.1'||host==='192.168.77.1')setHost(r.manifest.family==='mu300'?'192.168.77.1':'10.0.55.1');} }
   }
   const blocked = busy || running;
   dropHandler.current = event=>{

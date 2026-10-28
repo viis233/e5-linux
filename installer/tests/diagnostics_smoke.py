@@ -58,7 +58,7 @@ def main():
         assert page.locator('progress').count()==0
         assert page.get_by_text('正在处理，请保持设备供电。',exact=True).count()==1
         page.screenshot(path=str(ROOT/'screenshots/install-activity-debug-zh.png'))
-        page.evaluate("window.__emitFixture({stage:'openwrt_boot',status:'waiting_user',revision:13,details:{host:'192.168.9.1',reboot_manually:true}})")
+        page.evaluate("window.__emitFixture({stage:'openwrt_boot',status:'waiting_user',revision:13,details:{host:'10.0.55.1',reboot_manually:true}})")
         settle(page);layout(page)
         assert page.locator('h1').inner_text()=='请现在手动重启设备'
         assert '用户名 root，默认密码 root' in page.locator('.login-hint').inner_text()
@@ -85,7 +85,7 @@ def main():
         assert guidance.bounding_box()==before
         page.screenshot(path=str(ROOT/'screenshots/openwrt-endpoint-mismatch-zh.png'))
         page.get_by_label('语言').select_option('en');page.get_by_label('Theme').select_option('dark')
-        page.evaluate("window.__emitFixture({stage:'openwrt_boot',status:'waiting_device',revision:15,details:{host:'192.168.9.1',reboot_manually:false}})")
+        page.evaluate("window.__emitFixture({stage:'openwrt_boot',status:'waiting_device',revision:15,details:{host:'10.0.55.1',reboot_manually:false}})")
         settle(page);layout(page)
         assert page.locator('h1').inner_text()=='Waiting for OpenWrt to start'
         assert 'automatic restart was requested' in guidance.inner_text()

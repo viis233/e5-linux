@@ -8,7 +8,7 @@
 #   --switch   install, then make OpenWrt the default and boot it
 #
 # The device fetches the tarball and openwrt/device-install.sh from a
-# short-lived HTTP server on this host (E5_HOST_IP, default 192.168.9.2: the
+# short-lived HTTP server on this host (E5_HOST_IP, default 10.0.55.2: the
 # address the E5 gives the USB host) and runs the script over telnet
 # (tools/e5-telnet.py, the Debian image's root/root login).
 set -euo pipefail
@@ -18,7 +18,7 @@ MODE=
 case "${1:-}" in --try|--switch) MODE=$1; shift ;; esac
 T=${1:-$(ls -t "$TOP"/out/openwrt/e5-openwrt-*-rootfs.tar.gz 2>/dev/null | head -1)}
 [ -f "$T" ] || { echo "no tarball -- run openwrt/build-rootfs.sh first" >&2; exit 1; }
-IP=${E5_HOST_IP:-192.168.9.2}
+IP=${E5_HOST_IP:-10.0.55.2}
 PORT=${E5_HTTP_PORT:-8791}
 
 SERVE=$(mktemp -d)

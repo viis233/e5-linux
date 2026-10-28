@@ -47,7 +47,7 @@ function App() {
   const [planOrigin, setPlanOrigin] = useState<View>('install');
   const [size, setSize] = useState('4');
   const [grow, setGrow] = useState(true);
-  const [host, setHost] = useState('192.168.9.1');
+  const [host, setHost] = useState('10.0.55.1');
   const [password, setPassword] = useState('');
   const [accepted, setAccepted] = useState(false);
   const [nvInput, setNvInput] = useState('');
@@ -98,7 +98,7 @@ function App() {
     }
     if (next.stage === 'openwrt_boot' && verificationTransaction.current !== next.id) {
       verificationTransaction.current = next.id;
-      setHost(next.details?.host || next.choices.host || (next.package.adapter === 'e5' ? '192.168.9.1' : '192.168.77.1'));
+      setHost(next.details?.host || next.choices.host || (next.package.adapter === 'e5' ? '10.0.55.1' : '192.168.77.1'));
     }
     setTx(next);
   }, [append, t]);
@@ -172,7 +172,7 @@ function App() {
   const verify = async (folder = path) => {
     setPkg(undefined); setDevice(undefined);
     const p = await task(() => request<Package>('package', {path: folder}), t.verified);
-    if (p) {setPkg(p); setPath(p.path); setHost(p.adapter === 'e5' ? '192.168.9.1' : '192.168.77.1'); append(t.verified);}
+    if (p) {setPkg(p); setPath(p.path); setHost(p.adapter === 'e5' ? '10.0.55.1' : '192.168.77.1'); append(t.verified);}
   };
   const refresh = async () => {
     setDevice(undefined);

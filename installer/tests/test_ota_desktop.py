@@ -115,7 +115,7 @@ class DesktopTests(unittest.TestCase):
             mock = patch.object(desktop, name, value)
             mock.start(); self.addCleanup(mock.stop)
         self.app = desktop.Desktop(self.root, lambda *_: None)
-        self.params = {'host': '192.168.9.1', 'password': 'test'}
+        self.params = {'host': '10.0.55.1', 'password': 'test'}
 
     def status(self):
         result = self.app.dispatch('ota_status', self.params)
