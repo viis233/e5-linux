@@ -32,6 +32,7 @@ fi
 cd /src/linux
 python3 /policy/display.py .
 python3 /e5-policy/panel-dither.py .
+python3 /policy/boot-optimization.py .
 python3 /policy/power.py .
 python3 /policy/charger-capabilities.py .
 python3 /policy/emmc.py .
