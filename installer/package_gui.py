@@ -90,7 +90,7 @@ def attach(package, artifact=None, required=True):
     if not mac and (default_mac/'build.json').is_file():
         mac = default_mac
     if not mac:
-        print('WARNING: no Apple Silicon GUI build; packaging the OpenWrt installer without the macOS build', file=sys.stderr)
+        print('WARNING: no Apple Silicon GUI build; packaging the OpenWrt installer without the macOS build')
     else:
         mac = Path(mac)
     # Validate both platforms before changing the destination package.
