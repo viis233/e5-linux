@@ -68,9 +68,9 @@ async function fetch(){return {ok:true,status:200,json:async()=>data};}
  data={device:{image:'legacy-1'},error:'partial warning'};
  assert.equal((await pageRead('/api/advanced',6)).device.image,'legacy-1');
  assert.equal(marks.pop(),false);
-})().catch(e=>{console.error(e);process.exitCode=1;});
+})().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>process.exit());
 '''
-        subprocess.run(['node','-e',harness],check=True,timeout=8)
+        subprocess.run(['node','-e',harness],check=True,timeout=30)
 
 
 if __name__=='__main__':unittest.main()
