@@ -80,7 +80,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          repository: Enceka/infoscreen
+          repository: viis233/e5-infoscreen
           ref: ${{ inputs.infoscreen_ref || vars.E5_INFOSCREEN_REF || 'main' }}
           path: ci/infoscreen
           persist-credentials: false
