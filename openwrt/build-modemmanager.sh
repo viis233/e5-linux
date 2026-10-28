@@ -157,7 +157,7 @@ for try in 1 2 3 4 5; do
     for f in $missing; do rm -rf feeds/$f feeds/$f.*; ./scripts/feeds update $f >/dev/null || true; done
 done
 [ -z "$missing" ] || { echo "feeds not cloned: $missing"; exit 1; }
-./scripts/feeds install modemmanager python3 dbus-utils >/dev/null
+./scripts/feeds install modemmanager python3 dbus-utils json-c >/dev/null
 P=feeds/packages/net/modemmanager
 # the package directory back to the feed state, then the E5 changes on top
 git -C feeds/packages checkout -q -- net/modemmanager
@@ -201,6 +201,8 @@ if [ ! -f staging_dir/.e5-kernel-ok ]; then
     make target/linux/compile -j"$JOBS" >/build/log 2>&1 || { tail -60 /build/log; exit 1; }
     touch staging_dir/.e5-kernel-ok
 fi
+echo "== json-c (the info screen native helpers link it)"
+make package/json-c/compile -j"$JOBS" >/build/log 2>&1 || { tail -80 /build/log; exit 1; }
 echo "== modemmanager"
 make package/modemmanager/clean >/dev/null 2>&1 || true
 make package/modemmanager/compile -j"$JOBS" >/build/log 2>&1 || { tail -80 /build/log; exit 1; }
