@@ -153,7 +153,7 @@ jobs:
           python3 tools/tests/openwrt-package-state.py
           python3 ci/infoscreen-plugins/tools/check.py
           if [ -f ci/infoscreen/tests/network-checks.sh ]; then
-            E5_TEST_IMAGE="e5-openwrt-base:$E5_WRT_VER" bash ci/infoscreen/tests/network-checks.sh
+            E5_TEST_IMAGE="e5-openwrt-base:$E5_WRT_VER" E5_DEVICE_COMMON="$GITHUB_WORKSPACE/openwrt" bash ci/infoscreen/tests/network-checks.sh
             python3 ci/infoscreen/tests/usb-reset.py
           fi
       - name: Build ARM64 toolchain container
