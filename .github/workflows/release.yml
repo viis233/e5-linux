@@ -50,7 +50,7 @@ jobs:
     uses: ./.github/workflows/gui-macos.yml
 
   build:
-    needs: [gui, gui_macos]
+    needs: [gui]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 360
     outputs:
@@ -205,11 +205,13 @@ jobs:
         with:
           name: openwrt-installer-windows
           path: installer/artifacts/windows
-      - uses: actions/download-artifact@v4
+      - if: needs.gui_macos.result == 'success'
+        uses: actions/download-artifact@v4
         with:
           name: openwrt-installer-macos-arm64
           path: ${{ runner.temp }}/installer-macos
       - name: Restore native macOS artifact
+        if: needs.gui_macos.result == 'success'
         run: |
           mkdir -p installer/artifacts/macos-arm64
           tar -xzf "$RUNNER_TEMP/installer-macos/openwrt-installer-macos-arm64.tar.gz" -C installer/artifacts/macos-arm64

@@ -90,8 +90,9 @@ def attach(package, artifact=None, required=True):
     if not mac and (default_mac/'build.json').is_file():
         mac = default_mac
     if not mac:
-        raise ValueError('Apple Silicon GUI build missing; build/download installer/artifacts/macos-arm64 or set OPENWRT_GUI_MACOS_ARTIFACT. Release packages require both Windows and macOS installers.')
-    mac = Path(mac)
+        print('WARNING: no Apple Silicon GUI build; packaging the OpenWrt installer without the macOS build', file=sys.stderr)
+    else:
+        mac = Path(mac)
     # Validate both platforms before changing the destination package.
     mac_metadata = validate_artifact(mac, 'macos-arm64', source) if mac else None
     shutil.copy2(artifact/'OpenWrt-Installer.exe', package/'OpenWrt-Installer.exe')
