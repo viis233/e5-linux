@@ -93,10 +93,13 @@ jobs:
           sudo apt-get install -y lz4 e2fsprogs binutils python3 qemu-user-static binfmt-support gcc pkg-config libglib2.0-dev libjson-c5 python3-gi dbus-daemon
           # The checksum-pinned OpenWrt SDK is x86_64; the runner is ARM64.
           sudo update-binfmts --enable qemu-x86_64
-          # Register Docker's qemu binfmt (multiarch) so --platform linux/amd64
-          # containers (the block-mount SDK) run x86_64 binaries correctly; the
-          # stock qemu-user-static crashes some of them (make/awk) on arm64.
-          sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes || true
+          # The stock qemu-user-static segfaults x86_64 make/awk under
+          # emulation; replace its binary with the newer multiarch one, keeping
+          # the update-binfmts registration intact.
+          sudo docker create --name qemu-multi multiarch/qemu-user-static 2>/dev/null || true
+          sudo docker cp qemu-multi:/usr/bin/qemu-x86_64-static /tmp/qemu-x86_64-static 2>/dev/null || true
+          sudo docker rm qemu-multi 2>/dev/null || true
+          sudo install -m 755 /tmp/qemu-x86_64-static /usr/bin/qemu-x86_64-static 2>/dev/null || true
       - name: Restore and verify bootstrap inputs
         env:
           INPUTS_URL: ${{ vars.E5_CI_INPUTS_URL }}
