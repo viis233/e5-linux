@@ -4,6 +4,7 @@ import argparse
 import gzip
 import hashlib
 import json
+import os
 from pathlib import Path
 import runpy
 import shlex
@@ -37,6 +38,10 @@ def add_android_switcher(package):
 
 
 def add_diff_studio(package):
+    if os.environ.get('OPENWRT_GUI_OPTIONAL') == '1':
+        # The diff studio needs the GUI build manifests; skip them without the
+        # Windows/macOS installers (build-only runs).
+        return
     return runpy.run_path(str(HERE.parents[1] / 'tools/package-diff-studio.py'))['attach'](package)
 
 
