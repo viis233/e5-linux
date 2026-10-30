@@ -168,6 +168,9 @@ test -f "$OUT/install-lock-tools.tar" || {
     python3 "$TOP/openwrt/prepare-ext4-tools.py" --root "$WORK/f2fs-root" --lock-addon-from "$OUT/ext4-tools.tar" --out "$OUT/install-lock-tools.tar"
 }
 cp "$OUT/install-lock-tools.tar" "$P/files/"
+# The NV preservation helper; part-two-stage/flash expect files/nv-persistence.py
+# (build-profile-tf.py writes it; this assembly path must too).
+tr -d '\r' < "$TOP/openwrt/luci-app-t551m/root/usr/lib/e5/nv_persistence.py" > "$P/files/nv-persistence.py"
 cp "$TOP/LICENSE" "$P/docs/LICENSE"
 cp "$IMG" "$P/files/openwrt.ext4.gz"
 cp "$BOOT.img" "$P/files/boot.img"
