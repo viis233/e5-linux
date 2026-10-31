@@ -10,7 +10,11 @@ TOP=Path(__file__).resolve().parents[2]
 source=(TOP/'boot/init').read_text()
 function=source[source.index('early_card_firmware() {'):source.index('\nearly_device_firmware() {')]
 assert '-o ro,noload,noatime' in function
-assert source.index('[ "$module" = wcn_bsp.ko ] && early_device_firmware') < source.index('insmod "/linux-modules/$module"')
+# The early firmware runs before the module loop; wcn_bsp is handled by the
+# case branch in that loop (upstream refactor, 2026-10). The function body must
+# come before the insmod loop so the payload is staged in time.
+assert source.index('early_device_firmware() {') < source.index('if insmod "/linux-modules/$module"')
+assert 'wcn_bsp.ko) early_device_firmware' in source
 with tempfile.TemporaryDirectory(prefix='e5-early-fw-') as directory:
     root=Path(directory)
     for path in ['sys/mmcblk0','sys/mmcblk1','dev','card/lib/firmware','card/etc/e5','card/sbin','bin','firmware']:
