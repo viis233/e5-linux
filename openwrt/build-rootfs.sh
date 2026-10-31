@@ -476,6 +476,8 @@ if [ -n "$E5_BUILD_EPOCH" ]; then printf "%s\n" "$E5_BUILD_EPOCH" > $R/etc/e5/bu
 else date -u +%s > $R/etc/e5/build-time; fi
 if [ "$E5_FEATURES" = 1 ]; then
     python3 /in/feature-source/devices/e5/stage.py --root $R
+elif [ -n "$screen" ]; then
+    python3 /in/feature-source/devices/e5/stage.py --root $R
 fi
 if [ -f $R/usr/libexec/unisoc-modem/disable-channel-analysis ]; then
     ucode $R/usr/libexec/unisoc-modem/disable-channel-analysis $R
